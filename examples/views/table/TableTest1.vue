@@ -8,20 +8,19 @@
         resizable
         highlight-hover-row
         height="100%"
-        :padding="false"
         :loading="demo1.loading"
         :resizable-config="resizableConfig"
         :checkbox-config="{labelField: 'id', highlight: true, range: true}"
         :data="demo1.tableData">
         <template slot="header-append">
           <tr class="vxe-header--row">
-            <th class="vxe-header--column">1</th>
-            <th class="vxe-header--column">2</th>
-            <th class="vxe-header--column">3</th>
-            <th class="vxe-header--column">1</th>
-            <th class="vxe-header--column">2</th>
-            <th class="vxe-header--column">3</th>
-            <th class="vxe-header--column">1</th>
+            <th class="vxe-header--column"><div class="vxe-cell">1</div></th>
+            <th class="vxe-header--column"><div class="vxe-cell">2</div></th>
+            <th class="vxe-header--column"><div class="vxe-cell">3</div></th>
+            <th class="vxe-header--column"><div class="vxe-cell">1</div></th>
+            <th class="vxe-header--column"><div class="vxe-cell">2</div></th>
+            <th class="vxe-header--column"><div class="vxe-cell">3</div></th>
+            <th class="vxe-header--column"><div class="vxe-cell">1</div></th>
           </tr>
         </template>
         <vxe-column type="seq" width="60"></vxe-column>
