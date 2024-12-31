@@ -226,7 +226,9 @@ export default {
     const { isGroup, scrollXLoad, scrollYLoad, scrollbarWidth, dragCol } = tableReactData
     const { visibleColumn, fullColumnIdData } = tableInternalData
 
-    let renderHeaderList: VxeTableDefines.ColumnInfo[][] = headerColumn
+    // 去掉ts报错
+    // let renderHeaderList: VxeTableDefines.ColumnInfo[][] = headerColumn
+    let renderHeaderList = headerColumn
     let renderColumnList: VxeTableDefines.ColumnInfo[] = tableColumn
 
     if (isGroup) {
