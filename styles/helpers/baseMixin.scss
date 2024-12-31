@@ -4,13 +4,14 @@
 
 @mixin createCheckboxIcon {
   .vxe-checkbox--icon {
-    font-size: 1.34em;
+    font-size: 15px;
   }
   .vxe-checkbox--icon {
     color: var(--vxe-ui-input-border-color);
-    vertical-align: middle;
-    font-weight: 700;
+    font-weight: normal;
     user-select: none;
+    vertical-align: middle;
+    line-height: initial;
   }
   &.is--checked,
   &.is--indeterminate {
@@ -39,20 +40,20 @@
   }
   .vxe-checkbox--label {
     padding-left: 0.5em;
-    vertical-align: middle;
   }
 }
 
 @mixin createRadioIcon {
   cursor: pointer;
   .vxe-radio--icon {
-    font-size: 1.4em;
+    font-size: 15px;
   }
   .vxe-radio--icon {
     color: var(--vxe-ui-input-border-color);
-    vertical-align: middle;
-    font-weight: 700;
+    font-weight: normal;
     user-select: none;
+    vertical-align: middle;
+    line-height: initial;
   }
   &.is--checked {
     color: var(--vxe-ui-font-primary-color);
