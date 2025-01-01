@@ -338,8 +338,7 @@ export const Cell = {
     return renderHeaderCellBaseVNs(h, params, Cell.renderHeaderTitle(h, params))
   },
   renderDefaultCell (h: CreateElement, params: VxeTableDefines.CellRenderBodyParams & { $table: VxeTableConstructor & VxeTablePrivateMethods }) {
-    const { $table, row } = params
-    const column = params.column as any
+    const { $table, row, column } = params
     const { slots, editRender, cellRender } = column
     const renderOpts = editRender || cellRender
     if (slots && slots.default) {
