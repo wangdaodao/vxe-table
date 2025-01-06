@@ -11,6 +11,7 @@ export default {
     },
     error: {
       downErr: '下载失败',
+      errLargeData: '当绑定的数据量过大时，应该请使用 {0}，否则可能会出现卡顿',
       groupFixed: '如果使用分组表头，冻结列必须按组设置',
       groupMouseRange: '分组表头与 "{0}" 不能同时使用，这可能会出现错误',
       groupTag: '分组列头应该使用 "{0}" 而不是 "{1}"，这可能会出现错误',
@@ -75,7 +76,8 @@ export default {
       customCancel: 'يلغي',
       customRestore: 'استعادة الافتراضي',
       maxFixedCol: 'لا يمكن أن يتجاوز الحد الأقصى لعدد الأعمدة المجمدة {0}',
-      dragTip: 'نقل: {0}'
+      dragTip: 'نقل: {0}',
+      resizeColTip: '{0} Pixels'
     },
     grid: {
       selectOneRecord: '请至少选择一条记录！',

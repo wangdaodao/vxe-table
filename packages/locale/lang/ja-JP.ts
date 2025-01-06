@@ -11,6 +11,7 @@ export default {
     },
     error: {
       downErr: '下载失败',
+      errLargeData: '当绑定的数据量过大时，应该请使用 {0}，否则可能会出现卡顿',
       groupFixed: 'ヘッダー結合を使用する場合、固定列はグループで設定しなければなりません',
       groupMouseRange: 'ヘッダー結合と「{0}」は同時に使用できません。これによりエラーが発生する可能性があります',
       groupTag: 'ヘッダー結合は "{0}" を使ってください。 "{1}" はエラーが発生する可能性があります',
@@ -75,7 +76,8 @@ export default {
       customCancel: 'Cancel',
       customRestore: 'リセット',
       maxFixedCol: '最大固定列数が {0} です。',
-      dragTip: '移动：{0}'
+      dragTip: '移动：{0}',
+      resizeColTip: '{0} Pixels'
     },
     grid: {
       selectOneRecord: '1つ以上のレコードを選択してください',

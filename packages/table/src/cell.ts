@@ -265,55 +265,87 @@ function getDefaultCellLabel (params: VxeTableDefines.CellRenderBodyParams) {
   return formatText($table.getCellLabel(row, column), 1)
 }
 
+function renderCellHandle (h: CreateElement, params: VxeTableDefines.CellRenderBodyParams & {
+  $table: VxeTableConstructor & VxeTablePrivateMethods;
+}) {
+  const { column, $table } = params
+  const tableProps = $table
+  const { editConfig } = tableProps
+  const { type, treeNode, editRender } = column
+  const checkboxOpts = $table.computeCheckboxOpts
+  const editOpts = $table.computeEditOpts
+  switch (type) {
+    case 'seq':
+      return treeNode ? Cell.renderTreeIndexCell(h, params) : Cell.renderSeqCell(h, params)
+    case 'radio':
+      return treeNode ? Cell.renderTreeRadioCell(h, params) : Cell.renderRadioCell(h, params)
+    case 'checkbox':
+      return checkboxOpts.checkField ? (treeNode ? Cell.renderTreeSelectionCellByProp(h, params) : Cell.renderCheckboxCellByProp(h, params)) : (treeNode ? Cell.renderTreeSelectionCell(h, params) : Cell.renderCheckboxCell(h, params))
+    case 'expand':
+      return Cell.renderExpandCell(h, params)
+    case 'html':
+      return treeNode ? Cell.renderTreeHTMLCell(h, params) : Cell.renderHTMLCell(h, params)
+  }
+  if (editConfig && editRender) {
+    return editOpts.mode === 'cell' ? (treeNode ? Cell.renderTreeCellEdit(h, params) : Cell.renderCellEdit(h, params)) : (treeNode ? Cell.renderTreeRowEdit(h, params) : Cell.renderRowEdit(h, params))
+  }
+  return treeNode ? Cell.renderTreeCell(h, params) : Cell.renderDefaultCell(h, params)
+}
+
+function renderHeaderHandle (h: CreateElement, params: VxeTableDefines.CellRenderHeaderParams & {
+  $table: VxeTableConstructor & VxeTablePrivateMethods;
+}) {
+  const { column, $table } = params
+  const tableProps = $table
+  const { editConfig } = tableProps
+  const { type, filters, sortable, editRender } = column
+  switch (type) {
+    case 'seq':
+      return Cell.renderSeqHeader(h, params)
+    case 'radio':
+      return Cell.renderRadioHeader(h, params)
+    case 'checkbox':
+      return Cell.renderCheckboxHeader(h, params)
+    case 'html':
+      if (filters && sortable) {
+        return Cell.renderSortAndFilterHeader(h, params)
+      } else if (sortable) {
+        return Cell.renderSortHeader(h, params)
+      } else if (filters) {
+        return Cell.renderFilterHeader(h, params)
+      }
+      break
+  }
+  if (editConfig && editRender) {
+    return Cell.renderEditHeader(h, params)
+  } else if (filters && sortable) {
+    return Cell.renderSortAndFilterHeader(h, params)
+  } else if (sortable) {
+    return Cell.renderSortHeader(h, params)
+  } else if (filters) {
+    return Cell.renderFilterHeader(h, params)
+  }
+  return Cell.renderDefaultHeader(h, params)
+}
+
+function renderFooterHandle (h: CreateElement, params: VxeTableDefines.CellRenderFooterParams & {
+  $table: VxeTableConstructor & VxeTablePrivateMethods;
+}) {
+  return Cell.renderDefaultFooter(h, params)
+}
+
 export const Cell = {
   createColumn ($xetable: any, _vm: any) {
-    const { type, sortable, remoteSort, filters, editRender, treeNode } = _vm
-    const { editConfig, editOpts, checkboxOpts } = $xetable
-    const renMaps: any = {
-      renderHeader: this.renderDefaultHeader,
-      renderCell: treeNode ? this.renderTreeCell : this.renderDefaultCell,
-      renderFooter: this.renderDefaultFooter
+    const { type } = _vm
+    const renConfs: any = {
+      renderHeader: renderHeaderHandle,
+      renderCell: renderCellHandle,
+      renderFooter: renderFooterHandle
     }
-    switch (type) {
-      case 'seq':
-        renMaps.renderHeader = this.renderSeqHeader
-        renMaps.renderCell = treeNode ? this.renderTreeIndexCell : this.renderSeqCell
-        break
-      case 'radio':
-        renMaps.renderHeader = this.renderRadioHeader
-        renMaps.renderCell = treeNode ? this.renderTreeRadioCell : this.renderRadioCell
-        break
-      case 'checkbox':
-        renMaps.renderHeader = this.renderCheckboxHeader
-        renMaps.renderCell = checkboxOpts.checkField ? (treeNode ? this.renderTreeSelectionCellByProp : this.renderCheckboxCellByProp) : (treeNode ? this.renderTreeSelectionCell : this.renderCheckboxCell)
-        break
-      case 'expand':
-        renMaps.renderCell = this.renderExpandCell
-        renMaps.renderData = this.renderExpandData
-        break
-      case 'html':
-        renMaps.renderCell = treeNode ? this.renderTreeHTMLCell : this.renderHTMLCell
-        if (filters && (sortable || remoteSort)) {
-          renMaps.renderHeader = this.renderSortAndFilterHeader
-        } else if (sortable || remoteSort) {
-          renMaps.renderHeader = this.renderSortHeader
-        } else if (filters) {
-          renMaps.renderHeader = this.renderFilterHeader
-        }
-        break
-      default:
-        if (editConfig && editRender) {
-          renMaps.renderHeader = this.renderEditHeader
-          renMaps.renderCell = editOpts.mode === 'cell' ? (treeNode ? this.renderTreeCellEdit : this.renderCellEdit) : (treeNode ? this.renderTreeRowEdit : this.renderRowEdit)
-        } else if (filters && (sortable || remoteSort)) {
-          renMaps.renderHeader = this.renderSortAndFilterHeader
-        } else if (sortable || remoteSort) {
-          renMaps.renderHeader = this.renderSortHeader
-        } else if (filters) {
-          renMaps.renderHeader = this.renderFilterHeader
-        }
+    if (type === 'expand') {
+      renConfs.renderData = Cell.renderExpandData
     }
-    return createColumn($xetable, _vm, renMaps)
+    return createColumn($xetable, _vm, renConfs)
   },
   /**
    * 列头标题
@@ -852,43 +884,45 @@ export const Cell = {
   },
   renderSortIcon (h: CreateElement, params: (VxeTableDefines.CellRenderHeaderParams | VxeTableDefines.CellRenderHeaderParams) & { $table: VxeTableConstructor & VxeTablePrivateMethods }) {
     const { $table, column } = params
-    const { showIcon, iconLayout, iconAsc, iconDesc } = $table.sortOpts
-    return showIcon
-      ? [
-          h('span', {
-            class: ['vxe-cell--sort', `vxe-cell--sort-${iconLayout}-layout`]
-          }, [
-            h('i', {
-              class: ['vxe-sort--asc-btn', iconAsc || getIcon().TABLE_SORT_ASC, {
-                'sort--active': column.order === 'asc'
-              }],
-              attrs: {
-                title: getI18n('vxe.table.sortAsc')
-              },
-              on: {
-                click (evnt: any) {
-                  evnt.stopPropagation()
-                  $table.triggerSortEvent(evnt, column, 'asc')
-                }
+    const sortOpts = $table.computeSortOpts
+    const { showIcon, iconLayout, iconAsc, iconDesc, iconVisibleMethod } = sortOpts
+    if (showIcon && (!iconVisibleMethod || iconVisibleMethod(params))) {
+      return [
+        h('span', {
+          class: ['vxe-cell--sort', `vxe-cell--sort-${iconLayout}-layout`]
+        }, [
+          h('i', {
+            class: ['vxe-sort--asc-btn', iconAsc || getIcon().TABLE_SORT_ASC, {
+              'sort--active': column.order === 'asc'
+            }],
+            attrs: {
+              title: getI18n('vxe.table.sortAsc')
+            },
+            on: {
+              click (evnt: any) {
+                evnt.stopPropagation()
+                $table.triggerSortEvent(evnt, column, 'asc')
               }
-            }),
-            h('i', {
-              class: ['vxe-sort--desc-btn', iconDesc || getIcon().TABLE_SORT_DESC, {
-                'sort--active': column.order === 'desc'
-              }],
-              attrs: {
-                title: getI18n('vxe.table.sortDesc')
-              },
-              on: {
-                click (evnt: any) {
-                  evnt.stopPropagation()
-                  $table.triggerSortEvent(evnt, column, 'desc')
-                }
+            }
+          }),
+          h('i', {
+            class: ['vxe-sort--desc-btn', iconDesc || getIcon().TABLE_SORT_DESC, {
+              'sort--active': column.order === 'desc'
+            }],
+            attrs: {
+              title: getI18n('vxe.table.sortDesc')
+            },
+            on: {
+              click (evnt: any) {
+                evnt.stopPropagation()
+                $table.triggerSortEvent(evnt, column, 'desc')
               }
-            })
-          ])
-        ]
-      : []
+            }
+          })
+        ])
+      ]
+    }
+    return []
   },
 
   /**
@@ -902,30 +936,31 @@ export const Cell = {
     const tableReactData = $table as unknown as TableReactData
     const { filterStore } = tableReactData
     const filterOpts = $table.computeFilterOpts
-    const { showIcon, iconNone, iconMatch } = filterOpts
-    return showIcon
-      ? [
-          h('span', {
-            class: ['vxe-cell--filter', {
-              'is--active': filterStore.visible && filterStore.column === column
-            }]
-          }, [
-            h('i', {
-              class: ['vxe-filter--btn', hasFilter ? (iconMatch || getIcon().TABLE_FILTER_MATCH) : (iconNone || getIcon().TABLE_FILTER_NONE)],
-              attrs: {
-                title: getI18n('vxe.table.filter')
-              },
-              on: {
-                click (evnt: MouseEvent) {
-                  if ($table.triggerFilterEvent) {
-                    $table.triggerFilterEvent(evnt, params.column, params)
-                  }
+    const { showIcon, iconNone, iconMatch, iconVisibleMethod } = filterOpts
+    if (showIcon && (!iconVisibleMethod || iconVisibleMethod(params))) {
+      return [
+        h('span', {
+          class: ['vxe-cell--filter', {
+            'is--active': filterStore.visible && filterStore.column === column
+          }]
+        }, [
+          h('i', {
+            class: ['vxe-filter--btn', hasFilter ? (iconMatch || getIcon().TABLE_FILTER_MATCH) : (iconNone || getIcon().TABLE_FILTER_NONE)],
+            attrs: {
+              title: getI18n('vxe.table.filter')
+            },
+            on: {
+              click (evnt: MouseEvent) {
+                if ($table.triggerFilterEvent) {
+                  $table.triggerFilterEvent(evnt, params.column, params)
                 }
               }
-            })
-          ])
-        ]
-      : []
+            }
+          })
+        ])
+      ]
+    }
+    return []
   },
 
   /**

@@ -66,6 +66,7 @@ function renderColumn (h: any, _vm: any, $xeTable: any, seq: any, rowid: any, fi
     sYOpts,
     scrollXLoad,
     scrollYLoad,
+    isCalcCellHeight,
     highlightCurrentRow,
     showOverflow: allColumnOverflow,
     isAllOverflow,
@@ -94,7 +95,7 @@ function renderColumn (h: any, _vm: any, $xeTable: any, seq: any, rowid: any, fi
     validErrorMaps
   } = $xeTable
   const rowDragOpts = $xeTable.computeRowDragOpts
-  const { disabledMethod: dragDisabledMethod } = rowDragOpts
+  const { disabledMethod: dragDisabledMethod, isCrossDrag, isPeerDrag } = rowDragOpts
   const { selectCellToRow } = areaOpts
   const cellOpts = $xeTable.computeCellOpts
   const { type, cellRender, editRender, align, showOverflow, className, treeNode, slots } = column
@@ -294,14 +295,15 @@ function renderColumn (h: any, _vm: any, $xeTable: any, seq: any, rowid: any, fi
     }
   }
   let cellHeight = ''
+  const vnHeight = isCalcCellHeight ? rest.height : 0
   if (hasEllipsis) {
     if (scrollYRHeight || rowHeight) {
       cellHeight = `${scrollYRHeight || rowHeight}px`
     } else if (!isAllOverflow) {
-      cellHeight = `${rest.height || 18}px`
+      cellHeight = `${vnHeight || rowHeight || 18}px`
     }
   } else {
-    cellHeight = `${rest.height || 18}px`
+    cellHeight = `${vnHeight || rowHeight || 18}px`
   }
 
   if (mouseConfig && mouseOpts.area && selectCellToRow) {
@@ -332,7 +334,7 @@ function renderColumn (h: any, _vm: any, $xeTable: any, seq: any, rowid: any, fi
         'col--ellipsis': hasEllipsis,
         'fixed--width': !isAutoCellWidth,
         'fixed--hidden': fixedHiddenColumn,
-        'is--drag-cell': isRowDragCell,
+        'is--drag-cell': isRowDragCell && (isCrossDrag || isPeerDrag || !rowLevel),
         'is--drag-disabled': isDisabledDrag,
         'col--dirty': isDirty,
         'col--active': editConfig && isEdit && (actived.row === row && (actived.column === column || editOpts.mode === 'row')),

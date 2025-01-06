@@ -11,6 +11,7 @@ export default {
     },
     error: {
       downErr: '下載失敗',
+      errLargeData: '当绑定的数据量过大时，应该请使用 {0}，否则可能会出现卡顿',
       groupFixed: '如果使用分組表頭，凍結列必須按群組設定',
       groupMouseRange: '分組表頭與 "{0}" 不能同時使用，這可能會出現錯誤',
       groupTag: '分組列頭應該使用 "{0}" 而不是 "{1}"，這可能會出現錯誤',
@@ -75,7 +76,8 @@ export default {
       customCancel: '取消',
       customRestore: '恢復預設',
       maxFixedCol: '最大凍結列的數量不能超過 {0} 個',
-      dragTip: '移動：{0}'
+      dragTip: '移動：{0}',
+      resizeColTip: '{0} 像素'
     },
     grid: {
       selectOneRecord: '請至少選擇一筆記錄！',

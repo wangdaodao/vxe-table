@@ -430,6 +430,8 @@ export default {
 
       scrollVMLoading: false,
 
+      isCalcCellHeight: 0,
+
       isCustomStatus: false,
 
       isDragRowMove: false,
@@ -700,7 +702,7 @@ export default {
     computeCustomOpts () {
       return Object.assign({}, getConfig().table.customConfig, this.customConfig)
     },
-    autoWidthColumnList () {
+    computeAutoWidthColumnList () {
       const { tableColumn, visibleColumn } = this
       return tableColumn.length || visibleColumn.length ? visibleColumn.filter((column: any) => column.width === 'auto' || column.minWidth === 'auto') : []
     },
@@ -792,7 +794,10 @@ export default {
   watch: {
     data (value: any) {
       const { initStatus } = this
-      this.loadTableData(value).then(() => {
+      if (value && value.length >= 50000) {
+        warnLog('vxe.error.errLargeData', ['loadData(data), reloadData(data)'])
+      }
+      this.loadTableData(value || []).then(() => {
         this.inited = true
         this.initStatus = true
         if (!initStatus) {

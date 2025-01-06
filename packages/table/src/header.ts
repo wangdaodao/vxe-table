@@ -5,9 +5,9 @@ import { getClass } from '../../ui/src/utils'
 import { getOffsetPos, hasClass, addClass, removeClass } from '../../ui/src/dom'
 import { convertHeaderColumnToRows, getColReMinWidth } from './util'
 
-import type { VxeTableDefines } from '../../../types'
+import type { VxeTableDefines, VxeTableConstructor, VxeTablePrivateMethods, VxeColumnPropTypes } from '../../../types'
 
-const { renderer, renderEmptyElement } = VxeUI
+const { getI18n, renderer, renderEmptyElement } = VxeUI
 
 const cellType = 'header'
 
@@ -19,9 +19,9 @@ const renderRows = (h: CreateElement, _vm: any, cols: VxeTableDefines.ColumnInfo
 
   const { resizable: allResizable, border, columnKey, headerCellClassName, headerCellStyle, showHeaderOverflow: allColumnHeaderOverflow, headerAlign: allHeaderAlign, align: allAlign, currentColumn, scrollXLoad, scrollYLoad, overflowX, scrollbarWidth, mouseConfig, columnOpts } = $xeTable
   const columnDragOpts = $xeTable.computeColumnDragOpts
-  const { disabledMethod: dragDisabledMethod } = columnDragOpts
+  const { disabledMethod: dragDisabledMethod, isCrossDrag, isPeerDrag } = columnDragOpts
   return cols.map((column: any, $columnIndex: any) => {
-    const { type, showHeaderOverflow, headerAlign, align, headerClassName, editRender, cellRender } = column
+    const { type, showHeaderOverflow, headerAlign, align, filters, headerClassName, editRender, cellRender } = column
     // const { enabled } = tooltipOpts
     const colid = column.id
     const renderOpts = editRender || cellRender
@@ -34,10 +34,15 @@ const renderRows = (h: CreateElement, _vm: any, cols: VxeTableDefines.ColumnInfo
     const showTitle = headOverflow === 'title'
     const showTooltip = headOverflow === true || headOverflow === 'tooltip'
     let hasEllipsis = showTitle || showTooltip || showEllipsis
-    const hasFilter = column.filters && column.filters.some((item: any) => item.checked)
+    let hasFilter = false
+    let firstFilterOption: VxeColumnPropTypes.FilterItem | null = null
+    if (filters) {
+      firstFilterOption = filters[0]
+      hasFilter = filters.some((item: VxeColumnPropTypes.FilterItem) => item.checked)
+    }
     const columnIndex = $xeTable.getColumnIndex(column)
     const _columnIndex = $xeTable.getVTColumnIndex(column)
-    const params = { $table: $xeTable, $grid: $xeGrid, $rowIndex, column, columnIndex, $columnIndex, _columnIndex, fixed: fixedType, type: cellType, isHidden: fixedHiddenColumn, hasFilter }
+    const params = { $table: $xeTable, $grid: $xeGrid, $rowIndex, column, columnIndex, $columnIndex, _columnIndex, firstFilterOption, fixed: fixedType, type: cellType, isHidden: fixedHiddenColumn, hasFilter }
     const thAttrs: Record<string, string | number | null> = {
       colid,
       colspan: column.colSpan > 1 ? column.colSpan : null,
@@ -82,9 +87,9 @@ const renderRows = (h: CreateElement, _vm: any, cols: VxeTableDefines.ColumnInfo
         'fixed--width': !isAutoCellWidth,
         'fixed--hidden': fixedHiddenColumn,
         'is--sortable': column.sortable,
-        'col--filter': !!column.filters,
+        'col--filter': !!filters,
         'is--filter-active': hasFilter,
-        'is--drag-active': !column.fixed && !isDisabledDrag,
+        'is--drag-active': !column.fixed && !isDisabledDrag && (isCrossDrag || isPeerDrag || !column.parentId),
         'is--drag-disabled': isDisabledDrag,
         'col--current': currentColumn === column
       }, getClass(headerClassName, params), getClass(headerCellClassName, params)],
@@ -109,7 +114,8 @@ const renderRows = (h: CreateElement, _vm: any, cols: VxeTableDefines.ColumnInfo
             'is--line': !border || border === 'none'
           }],
           on: {
-            mousedown: (evnt: any) => _vm.resizeMousedown(evnt, params)
+            mousedown: (evnt: MouseEvent) => _vm.resizeMousedownEvent(evnt, params),
+            dblclick: (evnt: MouseEvent) => $xeTable.handleResizeDblclickEvent(evnt, params)
           }
         })
         : null
@@ -342,7 +348,7 @@ export default {
       const { $parent: $xetable } = this
       this.headerColumn = $xetable.isGroup ? convertHeaderColumnToRows(this.tableGroupColumn) : []
     },
-    resizeMousedown (evnt: any, params: any) {
+    resizeMousedownEvent (evnt: MouseEvent, params: VxeTableDefines.CellRenderHeaderParams & { $table: VxeTableConstructor & VxeTablePrivateMethods }) {
       const $xeTable = this.$parent
       const tableInternalData = $xeTable
 
@@ -354,15 +360,17 @@ export default {
       const resizeBarElem = $xetable.$refs.resizeBar as HTMLDivElement
       const resizeTipElem = $xetable.$refs.refCellResizeTip as HTMLDivElement
       const wrapperElem = this.$el as HTMLDivElement
-      const { target: dragBtnElem, clientX: dragClientX } = evnt
-      const cell = params.cell = dragBtnElem.parentNode
+      const { clientX: dragClientX } = evnt
+      const dragBtnElem = evnt.target as HTMLDivElement
+      const cell = dragBtnElem.parentNode as HTMLTableCellElement
+      const cellParams = Object.assign(params, { cell })
       const resizableOpts = $xeTable.computeResizableOpts
       let dragLeft = 0
       const tableBodyElem = tableBody.$el
       const pos = getOffsetPos(dragBtnElem, tableEl)
       const dragBtnWidth = dragBtnElem.clientWidth
       const dragBtnOffsetWidth = Math.floor(dragBtnWidth / 2)
-      const minInterval = getColReMinWidth(params) - dragBtnOffsetWidth // 列之间的最小间距
+      const minInterval = getColReMinWidth(cellParams) - dragBtnOffsetWidth // 列之间的最小间距
       let dragMinLeft = pos.left - cell.clientWidth + dragBtnWidth + minInterval
       let dragPosLeft = pos.left + dragBtnOffsetWidth
       const domMousemove = document.onmousemove
@@ -374,14 +382,14 @@ export default {
       let fixedOffsetWidth = 0
       if (isLeftFixed || isRightFixed) {
         const siblingProp = isLeftFixed ? 'nextElementSibling' : 'previousElementSibling'
-        let tempCellElem = cell[siblingProp]
+        let tempCellElem = cell[siblingProp] as HTMLTableCellElement
         while (tempCellElem) {
           if (hasClass(tempCellElem, 'fixed--hidden')) {
             break
           } else if (!hasClass(tempCellElem, 'col--group')) {
             fixedOffsetWidth += tempCellElem.offsetWidth
           }
-          tempCellElem = tempCellElem[siblingProp]
+          tempCellElem = tempCellElem[siblingProp] as HTMLTableCellElement
         }
         if (isRightFixed && rightContainer) {
           dragPosLeft = rightContainer.offsetLeft + fixedOffsetWidth
@@ -423,7 +431,7 @@ export default {
           }
           resizeTipElem.style.left = `${resizeTipLeft}px`
           resizeTipElem.style.top = `${Math.min(tableEl.clientHeight - resizeTipHeight, Math.max(0, evnt.clientY - wrapperRect.y - resizeTipHeight / 2))}px`
-          resizeTipElem.textContent = `${column.renderWidth + (isRightFixed ? dragPosLeft - dragLeft : dragLeft - dragPosLeft)}px`
+          resizeTipElem.textContent = getI18n('vxe.table.resizeColTip', [column.renderWidth + (isRightFixed ? dragPosLeft - dragLeft : dragLeft - dragPosLeft)])
         }
       }
 

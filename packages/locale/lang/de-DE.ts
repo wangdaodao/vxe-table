@@ -12,6 +12,7 @@ export default
     },
     error: {
       downErr: 'Der Download ist fehlgeschlagen',
+      errLargeData: '当绑定的数据量过大时，应该请使用 {0}，否则可能会出现卡顿',
       groupFixed: 'Bei Verwendung von Gruppenköpfen müssen eingefrorene Spalten nach Gruppe festgelegt werden',
       groupMouseRange: 'Der Gruppenheader und „{0}“ können nicht gleichzeitig verwendet werden, was zu einem Fehler führen kann.',
       groupTag: 'Bei der Gruppierung von Spaltenüberschriften sollte „{0}“ anstelle von „{1}“ verwendet werden, was zu Fehlern führen kann',
@@ -76,7 +77,8 @@ export default
       customCancel: 'Stornieren',
       customRestore: 'Standard wiederherstellen',
       maxFixedCol: 'Die maximale Anzahl eingefrorener Spalten darf {0} nicht überschreiten.',
-      dragTip: 'Umzug: {0}'
+      dragTip: 'Umzug: {0}',
+      resizeColTip: '{0} Pixels'
     },
     grid: {
       selectOneRecord: 'Bitte wählen Sie mindestens einen Datensatz aus!',
