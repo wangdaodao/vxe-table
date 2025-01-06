@@ -82,6 +82,11 @@ const routes: Array<RouteConfig> = [
         path: 'table10',
         name: 'TableTest10',
         component: () => import('../views/table/TableTest10.vue')
+      },
+      {
+        path: 'table11',
+        name: 'TableTest11',
+        component: () => import('../views/table/TableTest11.vue')
       }
     ]
   },

@@ -43,6 +43,7 @@ export default Vue.extend({
         { name: 'TableTest8', routerLink: { name: 'TableTest8' } },
         { name: 'TableTest9', routerLink: { name: 'TableTest9' } },
         { name: 'TableTest10', routerLink: { name: 'TableTest10' } },
+        { name: 'TableTest11', routerLink: { name: 'TableTest11' } },
         { name: 'GridTest', routerLink: { name: 'GridTest' } },
         { name: 'TestKeepTest1', routerLink: { name: 'TestKeepTest1' } },
         { name: 'TestKeepTest2', routerLink: { name: 'TestKeepTest2' } },
